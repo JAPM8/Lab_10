@@ -1,4 +1,4 @@
-# 1 "main_Prelab_P2.c"
+# 1 "main_Lab.c"
 # 1 "<built-in>" 1
 # 1 "<built-in>" 3
 # 288 "<built-in>" 3
@@ -6,8 +6,8 @@
 # 1 "<built-in>" 2
 # 1 "C:/Program Files/Microchip/MPLABX/v6.00/packs/Microchip/PIC16Fxxx_DFP/1.3.42/xc8\\pic\\include\\language_support.h" 1 3
 # 2 "<built-in>" 2
-# 1 "main_Prelab_P2.c" 2
-# 15 "main_Prelab_P2.c"
+# 1 "main_Lab.c" 2
+# 16 "main_Lab.c"
 #pragma config FOSC = INTRC_NOCLKOUT
 #pragma config WDTE = OFF
 #pragma config PWRTE = OFF
@@ -2644,30 +2644,81 @@ extern __bank0 unsigned char __resetbits;
 extern __bank0 __bit __powerdown;
 extern __bank0 __bit __timeout;
 # 29 "C:/Program Files/Microchip/MPLABX/v6.00/packs/Microchip/PIC16Fxxx_DFP/1.3.42/xc8\\pic\\include\\xc.h" 2 3
-# 33 "main_Prelab_P2.c" 2
+# 34 "main_Lab.c" 2
 
 # 1 "C:\\Program Files\\Microchip\\xc8\\v2.35\\pic\\include\\c90\\stdint.h" 1 3
-# 34 "main_Prelab_P2.c" 2
-# 48 "main_Prelab_P2.c"
-void setup(void);
+# 35 "main_Lab.c" 2
 
-void __attribute__((picinterrupt(("")))) isr(void){
-    if(PIR1bits.RCIF){
-        PORTD = RCREG;
-    }
-    return;
-}
+# 1 "C:\\Program Files\\Microchip\\xc8\\v2.35\\pic\\include\\c90\\string.h" 1 3
+
+
+
+
+
+# 1 "C:/Program Files/Microchip/MPLABX/v6.00/packs/Microchip/PIC16Fxxx_DFP/1.3.42/xc8\\pic\\include\\__size_t.h" 1 3
+
+
+
+typedef unsigned size_t;
+# 6 "C:\\Program Files\\Microchip\\xc8\\v2.35\\pic\\include\\c90\\string.h" 2 3
+
+# 1 "C:/Program Files/Microchip/MPLABX/v6.00/packs/Microchip/PIC16Fxxx_DFP/1.3.42/xc8\\pic\\include\\__null.h" 1 3
+# 7 "C:\\Program Files\\Microchip\\xc8\\v2.35\\pic\\include\\c90\\string.h" 2 3
+
+
+
+
+
+
+
+extern void * memcpy(void *, const void *, size_t);
+extern void * memmove(void *, const void *, size_t);
+extern void * memset(void *, int, size_t);
+# 36 "C:\\Program Files\\Microchip\\xc8\\v2.35\\pic\\include\\c90\\string.h" 3
+extern char * strcat(char *, const char *);
+extern char * strcpy(char *, const char *);
+extern char * strncat(char *, const char *, size_t);
+extern char * strncpy(char *, const char *, size_t);
+extern char * strdup(const char *);
+extern char * strtok(char *, const char *);
+
+
+extern int memcmp(const void *, const void *, size_t);
+extern int strcmp(const char *, const char *);
+extern int stricmp(const char *, const char *);
+extern int strncmp(const char *, const char *, size_t);
+extern int strnicmp(const char *, const char *, size_t);
+extern void * memchr(const void *, int, size_t);
+extern size_t strcspn(const char *, const char *);
+extern char * strpbrk(const char *, const char *);
+extern size_t strspn(const char *, const char *);
+extern char * strstr(const char *, const char *);
+extern char * stristr(const char *, const char *);
+extern char * strerror(int);
+extern size_t strlen(const char *);
+extern char * strchr(const char *, int);
+extern char * strichr(const char *, int);
+extern char * strrchr(const char *, int);
+extern char * strrichr(const char *, int);
+# 36 "main_Lab.c" 2
+# 46 "main_Lab.c"
+char mensaje[]="HOLA MUNDO, ESTE ES MI LAB :D :V \r\nProfe póngame 100 ;)";
+int cont_car = sizeof(mensaje);
+int i;
+
+
+
+
+void setup(void);
+void impresion(void);
 
 void main(void) {
 
     setup();
 
     while(1){
-        _delay((unsigned long)((100)*(1000000/4000.0)));
-        if(PIR1bits.TXIF){
-            TXREG = PORTD;
+        impresion();
         }
-    }
 }
 
 void setup(void){
@@ -2692,12 +2743,17 @@ void setup(void){
     RCSTAbits.RX9 = 0;
 
     TXSTAbits.TXEN = 1;
-    RCSTAbits.CREN = 1;
-
-
-    INTCONbits.GIE = 1;
-    INTCONbits.PEIE = 1;
-    PIE1bits.RCIE = 1;
 
     return;
  }
+
+void impresion(void){
+    while(i<=cont_car){
+        if(PIR1bits.TXIF){
+            for(i=0; i<=cont_car; i++){
+                _delay((unsigned long)((100)*(1000000/4000.0)));
+                TXREG = mensaje[i];
+            }
+        }
+    }
+}

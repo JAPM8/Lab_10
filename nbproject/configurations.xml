@@ -14,6 +14,7 @@
                    projectFiles="true">
       <itemPath>main_Prelab_P1.c</itemPath>
       <itemPath>main_Prelab_P2.c</itemPath>
+      <itemPath>main_Lab.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -164,6 +165,8 @@
         <property key="wpo-lto" value="false"/>
       </XC8-config-global>
       <item path="main_Prelab_P1.c" ex="true" overriding="false">
+      </item>
+      <item path="main_Prelab_P2.c" ex="true" overriding="false">
       </item>
     </conf>
   </confs>
