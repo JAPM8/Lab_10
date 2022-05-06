@@ -2702,22 +2702,22 @@ extern char * strrchr(const char *, int);
 extern char * strrichr(const char *, int);
 # 36 "main_Lab.c" 2
 # 46 "main_Lab.c"
-char mensaje[]="HOLA MUNDO, ESTE ES MI LAB :D :V \r\nProfe póngame 100 ;)";
-int cont_car = sizeof(mensaje);
-int i;
+char mensaje[]="HOLA MUNDO, ESTE ES MI LAB :D :V \r\n Profe póngame 100 ;) \n\r";
+
 
 
 
 
 void setup(void);
-void impresion(void);
+void impresion(char txt[]);
 
 void main(void) {
 
     setup();
 
     while(1){
-        impresion();
+        impresion(mensaje);
+        _delay((unsigned long)((1000)*(1000000/4000.0)));
         }
 }
 
@@ -2725,8 +2725,8 @@ void setup(void){
     ANSEL = 0;
     ANSELH = 0;
 
-    TRISD = 0;
-    PORTD = 0;
+    TRISB = 0;
+    PORTB = 0;
 
     OSCCONbits.IRCF = 0b100;
     OSCCONbits.SCS = 1;
@@ -2747,13 +2747,12 @@ void setup(void){
     return;
  }
 
-void impresion(void){
-    while(i<=cont_car){
+void impresion(char txt[]){
+    uint8_t i = 0;
+    while(txt[i] != '\0'){
         if(PIR1bits.TXIF){
-            for(i=0; i<=cont_car; i++){
-                _delay((unsigned long)((100)*(1000000/4000.0)));
-                TXREG = mensaje[i];
-            }
+            TXREG = txt[i];
+            i++;
         }
     }
 }

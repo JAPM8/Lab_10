@@ -1,10 +1,11 @@
 /*
- * File:   main_Prelab_P2.c
- * Author: Javier Alejandro Pérez Marín
- * Comunicación serial con OSSCON de 1 MHz y baud rate de 9600, donde computadora
- * envia carácter al PIC
+ * File:   main_Postlab.c
  *
- * Created on 3 de mayo de 2022, 11:18 PM
+ * Author: Javier Alejandro Pérez Marín
+ * Comunicación serial con OSSCON de 1 MHz y baud rate de 9600, donde PIC
+ * envia información de lectura de un POT y devuelve una cadena que se le envia
+ *
+ * Created on 4 de mayo de 2022, 09:02 AM
  */
 
 // PIC16F887 Configuration Bit Settings
@@ -32,6 +33,8 @@
 
 #include <xc.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <string.h>
 
 /*
  * CONSTANTES
@@ -39,39 +42,53 @@
 #define _XTAL_FREQ 1000000
 
 /*
- * VARIABLES
+ * VARIABLES 
  */
+char pregunta_1 [] = "\n\rBienvenid@ - Seleccione solo con el número de opción:\n\r1.Leer potenciómetro.\n\r2.Enviar Ascii."; //Cadena de primer pregunta que será enviada
+char pregunta_2 []= "\n\r¡Perfecto! ¿Qué carácter o cadena quiere enviar? \n\rPresione asterisco cuando haya concluido"; //Cadena de segunda pregunta que será enviada
+char cadena_imp[]; //Array que almacenará cadena ingresada por el usuario
+int estado = 0; //Variable que indicará el estado en que se encuentra para realizar las diferentes opciones */
+int i, //Contador de carácteres impresos
+    val_pot, //Valor del potenciómetro
+    cont; //Contador de carácteres
 
 /*
  * PROTOTIPO DE FUNCIÓN
  */
 void setup(void);
+void impresion(char texto []); //Función para imprimir menú
+//void set_estado(void); //Función para cambiar entre estados*/
 
-void __interrupt() isr(void){
+/*void __interrupt() isr(void){
     if(PIR1bits.RCIF){ //Se verifica si hay un nuevo dato en el serial
-        PORTB = RCREG; //Se pasa el dato al PORTB
+        set_estado(); //Se pasa a función para determinar opción seleccionada
     }
     return;
-}
+}*/
 
 void main(void) {  
    
     setup(); // Se pasa a configurar PIC
         
     while(1){
-        __delay_ms(100); //Delay de 100 ms para que sea notoria la transmisión
-        if(PIR1bits.TXIF){ //Se verifica que el módulo esté libre para transmitir datos
-            TXREG = PORTD; //Se transmite de vuelta dato enviado por PC
+            impresion(pregunta_1);
+            __delay_ms(100);
+            impresion(pregunta_2);
+            /*if(estado == 0){ // Si estado = 0
+                impresion_menu(); // Entonces mostrar menú en terminal
+            }
+            if(estado == 2){ // Si estado = 2
+                impresion_p2(); // Entonces mostrar pregunta 2 en terminal
+            }*/
         }
-    }
 }
 
 void setup(void){
     ANSEL = 0;   //I/O DIGITALES
     ANSELH = 0; //I/O DIGITALES
     
-    TRISB = 0;  //PORTB completo como OUTPUT
-    PORTB = 0; //CLEAR de PORTB
+    TRISD = 0;  //PORTD completo como OUTPUT
+    PORTD = 0; //CLEAR de PORTD
     
     OSCCONbits.IRCF = 0b100;    //Oscilador interno de 1 mHz
     OSCCONbits.SCS = 1;        //Oscilador interno
@@ -93,7 +110,38 @@ void setup(void){
     //Config interrupciones
     INTCONbits.GIE = 1; //Se habilitan interrupciones globales
     INTCONbits.PEIE = 1; // Se habilitan interrupciones de periféricos
-    PIE1bits.RCIE = 1; //Se habilitn interrupciones de recepción
-    
+    PIE1bits.RCIE = 1; //Se habilitn interrupciones de recepción 
     return;
  }
+
+/*void set_estado(void){
+    if(estado == 1){
+        if(RCREG == 0x1){
+            //Mandar val pot
+            cadena_user[] = ("El valor actual del potenciometro es: %i o a su %i", val_pot, (val_pot*20/51));
+        }
+        else if(RCREG == 0x2){
+            estado = 2;
+            
+        }
+        else {
+            //error
+        }
+    }
+    return;
+}*/
+
+void impresion(char texto){
+    i = 0;
+    int cont = sizeof(texto); //Almacena cantidad de carácteres
+    while(i<=cont){ //Siempre que se hayan impreso menos o la misma cantidad de carácteres de la cadena.
+        if(PIR1bits.TXIF){ //Se verifica que el módulo esté libre para transmitir datos
+            for(i=0; i<=cont; i++){
+                __delay_ms(100); //Delay de 100 ms para que sea notoria la transmisión
+                TXREG = texto[i]; //Se imprime carácter por carácter
+            }
+        }
+    }
+    //estado = 1; //Se pasa a estado de input de usuario
+    return;
+}

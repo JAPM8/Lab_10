@@ -43,22 +43,22 @@
 /*
  * VARIABLES 
  */
-char mensaje[]="HOLA MUNDO, ESTE ES MI LAB :D :V \r\n Profe póngame 100 ;)"; //Cadena que será enviada
-int cont_car = sizeof(mensaje); //Almacena cantidad de carácteres
-int i; //Contador de carácteres impresos
+char mensaje[]="HOLA MUNDO, ESTE ES MI LAB :D :V \r\n Profe póngame 100 ;) \n\r"; //Cadena que será enviada
+
 
 /*
  * PROTOTIPO DE FUNCIÓN
  */
 void setup(void);
-void impresion(void); //Función para imprimir cadena
+void impresion(char txt[]); //Función para imprimir cadena
 
 void main(void) {  
    
     setup(); // Se pasa a configurar PIC
         
     while(1){
-        impresion(); //Se llama función para impresión de la cadena
+        impresion(mensaje); //Se llama función para impresión de la cadena
+        __delay_ms(1000); //Delay de 100 ms para que sea notoria la transmisión
         }
 }
 
@@ -66,8 +66,8 @@ void setup(void){
     ANSEL = 0;   //I/O DIGITALES
     ANSELH = 0; //I/O DIGITALES
     
-    TRISD = 0;  //PORTD completo como OUTPUT
-    PORTD = 0; //CLEAR de PORTD
+    TRISB = 0;  //PORTB completo como OUTPUT
+    PORTB = 0; //CLEAR de PORTB
     
     OSCCONbits.IRCF = 0b100;    //Oscilador interno de 1 mHz
     OSCCONbits.SCS = 1;        //Oscilador interno
@@ -88,13 +88,12 @@ void setup(void){
     return;
  }
 
-void impresion(void){
-    while(i<=cont_car){ //Siempre que se hayan impreso menos o la misma cantidad de carácteres de la cadena.
+void impresion(char txt[]){
+    uint8_t i = 0; //Contador de carácteres impresos
+    while(txt[i] != '\0'){ //Se verifica el carácter inválido pues este indica el fin de una cadena.
         if(PIR1bits.TXIF){ //Se verifica que el módulo esté libre para transmitir datos
-            for(i=0; i<=cont_car; i++){
-                __delay_ms(100); //Delay de 100 ms para que sea notoria la transmisión
-                TXREG = mensaje[i]; //Se imprime carácter del mensaje
-            }
+            TXREG = txt[i]; //Se imprime carácter del mensaje
+            i++;
         }
     }
 }
