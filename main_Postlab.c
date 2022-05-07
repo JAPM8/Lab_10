@@ -3,7 +3,7 @@
  *
  * Author: Javier Alejandro Pérez Marín
  * Comunicación serial con OSSCON de 1 MHz y baud rate de 9600, donde PIC
- * envia información de lectura de un POT y devuelve una cadena que se le envia
+ * envia información de lectura de un POT y devuelve un ASCII que se le envia
  *
  * Created on 4 de mayo de 2022, 09:02 AM
  */
@@ -34,6 +34,7 @@
 #include <xc.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 /*
@@ -44,49 +45,63 @@
 /*
  * VARIABLES 
  */
-char pregunta_1 [] = "\n\rBienvenid@ - Seleccione solo con el número de opción:\n\r1.Leer potenciómetro.\n\r2.Enviar Ascii."; //Cadena de primer pregunta que será enviada
-char pregunta_2 []= "\n\r¡Perfecto! ¿Qué carácter o cadena quiere enviar? \n\rPresione asterisco cuando haya concluido"; //Cadena de segunda pregunta que será enviada
-char cadena_imp[]; //Array que almacenará cadena ingresada por el usuario
-int estado = 0; //Variable que indicará el estado en que se encuentra para realizar las diferentes opciones */
-int i, //Contador de carácteres impresos
-    val_pot, //Valor del potenciómetro
-    cont; //Contador de carácteres
+char pregunta_1 [] = "\n\rBienvenid@ - Seleccione ingresando solo el número:\n\r1.Leer potenciómetro.\n\r2.Enviar Ascii.\n\r"; //Cadena de primer pregunta que será enviada
+char pregunta_2 [] = "\n\r¡Perfecto!\n\r¿Qué carácter o número quiere enviar (una letra o un dígito)? \n\r"; //Cadena de segunda pregunta que será enviada
+uint8_t val_pot = 0; //Valor del potenciómetro
+char val_imp[]; //Array para almacenar valor del potenciómetro
+int  estado = 0; //Variable que indicará el estado en que se encuentra para realizar las diferentes opciones 
+int dato =0, //Variable que almacena ASCII ingresado por usuario
+    imp = 0; //Variable utilizada para impresión de feedback
 
 /*
  * PROTOTIPO DE FUNCIÓN
  */
 void setup(void);
-void impresion(char texto []); //Función para imprimir menú
-//void set_estado(void); //Función para cambiar entre estados*/
+void impresion(char txt[]); //Función para imprimir que recibe cadena de texto
+void set_estado(void); //Función para cambiar entre estados
 
-/*void __interrupt() isr(void){
+void __interrupt() isr(void){
+    //Interrupción del ADC
+    if (PIR1bits.ADIF){
+        if (ADCON0bits.CHS == 0){ //Se verifica canal AN0        
+            val_pot = ADRESH; //Se guardan los 8 bits de conversión
+        }
+        PIR1bits.ADIF = 0; // Limpiamos bandera ADC
+    }
+    //Interrupción UART
     if(PIR1bits.RCIF){ //Se verifica si hay un nuevo dato en el serial
-        set_estado(); //Se pasa a función para determinar opción seleccionada
+        set_estado(); //Se pasa a función para determinar opción seleccionada 
     }
     return;
-}*/
+}
 
 void main(void) {  
    
     setup(); // Se pasa a configurar PIC
         
     while(1){
-            impresion(pregunta_1);
-            __delay_ms(100);
-            impresion(pregunta_2);
-            /*if(estado == 0){ // Si estado = 0
-                impresion_menu(); // Entonces mostrar menú en terminal
+            if(ADCON0bits.GO == 0){ // Si no hay proceso de conversión
+            ADCON0bits.GO = 1; // Se inicia proceso de conversión
+            } 
+            if(estado == 0){ // Si estado = 0
+                impresion(pregunta_1); // Entonces mostrar menú en terminal
+                estado = 1; //Pasamos a indicar valor del potenciómetro
             }
             if(estado == 2){ // Si estado = 2
-                impresion_p2(); // Entonces mostrar pregunta 2 en terminal
-            }*/
+                impresion(pregunta_2); // Entonces mostrar pregunta 2 en terminal
+                impresion("Presione la barra espaciadora cuando esté listo \n\r\n\r"); //Instrucciones a usuario
+                estado = 3; //Se pasa a recibir ASCII del usuario
+            }
+                        
         }
 }
 
 void setup(void){
-    ANSEL = 0;   //I/O DIGITALES
+    ANSEL = 0x01; //Se configura PORTA0/AN0 como entrada analógica
     ANSELH = 0; //I/O DIGITALES
     
+    TRISA = 0x01; //PORTA0/AN0 como INPUT    
+    PORTA = 0;    //CLEAR DE PUERTO A
     TRISD = 0;  //PORTD completo como OUTPUT
     PORTD = 0; //CLEAR de PORTD
     
@@ -107,41 +122,76 @@ void setup(void){
     TXSTAbits.TXEN = 1; //Se habilita transmisor
     RCSTAbits.CREN = 1;//Se habilita el receptor
     
+    //Config ADC
+    ADCON0bits.ADCS = 0b00; // Fosc/2
+    ADCON1bits.VCFG0 = 0;  // Referencia VDD
+    ADCON1bits.VCFG1 = 0;  // Referencia VSS
+    ADCON0bits.CHS = 0b0000; // Se selecciona PORTA0/AN0
+    ADCON1bits.ADFM = 0; // Se indica que se tendrá un justificado a la izquierda
+    ADCON0bits.ADON = 1; // Se habilita el modulo ADC
+    __delay_us(40);     // Delay para sample time
+    
     //Config interrupciones
     INTCONbits.GIE = 1; //Se habilitan interrupciones globales
     INTCONbits.PEIE = 1; // Se habilitan interrupciones de periféricos
+    PIE1bits.ADIE = 1;  //Se habilita interrupcion del ADC
+    PIR1bits.ADIF = 0; // Limpieza de bandera del ADC
     PIE1bits.RCIE = 1; //Se habilitn interrupciones de recepción 
     return;
  }
 
-/*void set_estado(void){
+void set_estado(void){
     if(estado == 1){
-        if(RCREG == 0x1){
+        if(RCREG == 0b110001){ //Si usuario ingresa "1"
+            impresion ("1\n\r"); //Se imprime opción ingresada
             //Mandar val pot
-            cadena_user[] = ("El valor actual del potenciometro es: %i o a su %i", val_pot, (val_pot*20/51));
+            impresion ("\n\rEl valor actual del potenciómetro es: "); 
+            itoa(val_imp,val_pot,10); //Conversión int a ASCII mediante función itoa de STDLIB (ASCCII, INT, FORMATO)
+            impresion (val_imp); //Se imprime el valor del potenciómetro      
+            impresion (" que equivale al ~");
+            //Obtención de porcentaje del potenciómetro
+            itoa(val_imp,(val_pot*20/51),10); //Conversión int a ASCII mediante función itoa de STDLIB (ASCCII, INT, FORMATO)
+            impresion (val_imp); //Se imprime el valor del potenciómetro 
+            impresion ("%\n\r");
+            //Reinicio de menú
+            estado = 0;
         }
-        else if(RCREG == 0x2){
-            estado = 2;
-            
+        else if(RCREG == 0b110010){ //Si usuario ingresa "2"
+            impresion ("2\n\r"); //Se imprime opción ingresada
+            estado = 2; //Se pasa a preguntar que ASCII quiere enviar
         }
-        else {
-            //error
-        }
-    }
-    return;
-}*/
-
-void impresion(char texto){
-    i = 0;
-    int cont = sizeof(texto); //Almacena cantidad de carácteres
-    while(i<=cont){ //Siempre que se hayan impreso menos o la misma cantidad de carácteres de la cadena.
-        if(PIR1bits.TXIF){ //Se verifica que el módulo esté libre para transmitir datos
-            for(i=0; i<=cont; i++){
-                __delay_ms(100); //Delay de 100 ms para que sea notoria la transmisión
-                TXREG = texto[i]; //Se imprime carácter por carácter
+        else { //Si usuario ingresa opción no válida
+            for(imp = 0; imp<1;imp++){ //Display de feedback al usuario pues no ingresó opción válida
+                TXREG = RCREG;
             }
+            impresion ("\n\r¡Error, ingrese 1 o 2!\n\r\n\r"); //Se indica el problema
+            estado = 0; //Reinicio de menú
         }
     }
-    //estado = 1; //Se pasa a estado de input de usuario
+    if (estado == 3){ 
+        while(RCREG != 32){ // Se verifica el carácter space  pues este indica que el usuario terminó el ingreso de datos.
+            if (dato != RCREG){ //Siempre que se ingrese un valor diferente al ya guardado
+                dato = RCREG; //Se almacena el nuevo ASCII
+                for(imp = 0; imp<1;imp++){ //Se muestra en consola lo ingresado
+                    impresion("\b"); //Backspace para borrar valor anterior
+                    TXREG = dato;
+                }
+            } 
+        }
+        impresion("\n\r\n\rEl ASCII recibido fue: "); //Se indica el último ASCII recibido
+        TXREG = dato;
+        impresion(".\n\r");
+        estado = 0; //Reinicio de menú
+    }
     return;
+}
+
+void impresion(char txt[]){
+    uint8_t i = 0; //Contador de carácteres impresos
+    while(txt[i] != '\0'){ //Se verifica el carácter inválido pues este indica el fin de una cadena.
+        if(PIR1bits.TXIF){ //Se verifica que el módulo esté libre para transmitir datos
+            TXREG = txt[i]; //Se imprime carácter del mensaje
+            i++; //Se incrementa posición
+        }
+    }
 }

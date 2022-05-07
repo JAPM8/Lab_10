@@ -165,7 +165,7 @@
         <property key="user-pack-device-support" value=""/>
         <property key="wpo-lto" value="false"/>
       </XC8-config-global>
-      <item path="main_Lab.c" ex="false" overriding="false">
+      <item path="main_Lab.c" ex="true" overriding="false">
         <HI-TECH-COMP>
         </HI-TECH-COMP>
         <HI-TECH-LINK>
@@ -175,7 +175,7 @@
         <XC8-config-global>
         </XC8-config-global>
       </item>
-      <item path="main_Postlab.c" ex="true" overriding="false">
+      <item path="main_Postlab.c" ex="false" overriding="false">
         <HI-TECH-COMP>
         </HI-TECH-COMP>
         <HI-TECH-LINK>

@@ -61,7 +61,7 @@ void main(void) {
     while(1){
         __delay_ms(100); //Delay de 100 ms para que sea notoria la transmisión
         if(PIR1bits.TXIF){ //Se verifica que el módulo esté libre para transmitir datos
-            TXREG = PORTD; //Se transmite de vuelta dato enviado por PC
+            TXREG = PORTB; //Se transmite de vuelta dato enviado por PC
         }
     }
 }
